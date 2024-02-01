@@ -106,8 +106,8 @@
        driver
        db
        nil
-       (fn [conn]
-         (sql-jdbc.describe-database/describe-database driver {:connection conn})
+       (fn [_conn]
+         (sql-jdbc.describe-database/describe-database driver db)
          (reduce + (for [^ResultSet rs @resultsets]
                      (if (.isClosed rs) 0 1))))))))
 
@@ -156,7 +156,9 @@
          driver)))
 
 (deftest database-schema-filtering-test
-  (mt/test-drivers (schema-filtering-drivers)
+  ;; BigQuery is tested separately in `metabase.driver.bigquery-cloud-sdk-test/dataset-filtering-test`, because
+  ;; otherwise this test takes too long and flakes intermittently
+  (mt/test-drivers (disj (schema-filtering-drivers) :bigquery-cloud-sdk)
     (let [driver             (driver.u/database->driver (mt/db))
           schema-filter-prop (find-schema-filters-prop driver)
           filter-type-prop   (keyword (str (:name schema-filter-prop) "-type"))

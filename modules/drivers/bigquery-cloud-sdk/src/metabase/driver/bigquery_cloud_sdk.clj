@@ -38,7 +38,6 @@
 
 (driver/register! :bigquery-cloud-sdk, :parent :sql)
 
-
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                                     Client                                                     |
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -63,27 +62,26 @@
 ;;; |                                                      Sync                                                      |
 ;;; +----------------------------------------------------------------------------------------------------------------+
 
+(defn- list-datasets
+  "Fetch all datasets given database `details`, applying dataset filters if specified."
+  [{:keys [project-id dataset-filters-type dataset-filters-patterns] :as details}]
+  (let [client (database-details->client details)
+        project-id (or project-id (bigquery.common/database-details->credential-project-id details))
+        datasets (.listDatasets client project-id (u/varargs BigQuery$DatasetListOption))
+        inclusion-patterns (when (= "inclusion" dataset-filters-type) dataset-filters-patterns)
+        exclusion-patterns (when (= "exclusion" dataset-filters-type) dataset-filters-patterns)]
+    (for [^Dataset dataset (.iterateAll datasets)
+          :let [^DatasetId dataset-id (.. dataset getDatasetId)]
+          :when (driver.s/include-schema? inclusion-patterns
+                                          exclusion-patterns
+                                          (.getDataset dataset-id))]
+      dataset-id)))
+
 (defn- list-tables
   "Fetch all tables (new pages are loaded automatically by the API)."
-  (^Iterable [database-details]
-   (list-tables database-details {:validate-dataset? false}))
-  (^Iterable [{:keys [project-id dataset-filters-type dataset-filters-patterns] :as details} {:keys [validate-dataset?]}]
+  (^Iterable [details]
    (let [client (database-details->client details)
-         project-id (or project-id (bigquery.common/database-details->credential-project-id details))
-         datasets (.listDatasets client project-id (u/varargs BigQuery$DatasetListOption))
-         inclusion-patterns (when (= "inclusion" dataset-filters-type) dataset-filters-patterns)
-         exclusion-patterns (when (= "exclusion" dataset-filters-type) dataset-filters-patterns)
-         dataset-iter (for [^Dataset dataset (.iterateAll datasets)
-                            :let [^DatasetId dataset-id (.. dataset getDatasetId)]
-                            :when (driver.s/include-schema? inclusion-patterns
-                                                            exclusion-patterns
-                                                            (.getDataset dataset-id))]
-                        dataset-id)]
-     (when (and (not= dataset-filters-type "all")
-                validate-dataset?
-                (zero? (count dataset-iter)))
-       (throw (ex-info (tru "Looks like we cannot find any matching datasets.")
-                       {::driver/can-connect-message? true})))
+         dataset-iter (list-datasets details)]
      (apply concat (for [^DatasetId dataset-id dataset-iter]
                      (-> (.listTables client dataset-id (u/varargs BigQuery$TableListOption))
                          .iterateAll
@@ -99,14 +97,22 @@
                     {:schema dataset-id, :name (.getTable table-id)}))}))
 
 (defmethod driver/can-connect? :bigquery-cloud-sdk
-  [_ details-map]
-  ;; check whether we can connect by seeing whether listing tables succeeds
-  (try (some? (list-tables details-map {:validate-dataset? true}))
-       (catch Exception e
-         (when (::driver/can-connect-message? (ex-data e))
-           (throw e))
-         (log/errorf e (trs "Exception caught in :bigquery-cloud-sdk can-connect?"))
-         false)))
+  [_ details]
+  ;; check whether we can connect by seeing whether listing datasets succeeds
+  (let [[success? datasets] (try [true (list-datasets details)]
+                                 (catch Exception e
+                                   (log/errorf e (trs "Exception caught in :bigquery-cloud-sdk can-connect?"))
+                                   [false nil]))]
+    (cond
+      (not success?)
+      false
+      ;; if the datasets are filtered and we don't find any matches, throw an exception with a message that we can show
+      ;; to the user
+      (and (not= (:dataset-filters-type details) "all")
+           (nil? (first datasets)))
+      (throw (Exception. (tru "Looks like we cannot find any matching datasets.")))
+      :else
+      true)))
 
 (def ^:private empty-table-options
   (u/varargs BigQuery$TableOption))
