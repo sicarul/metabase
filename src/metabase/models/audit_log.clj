@@ -8,7 +8,6 @@
    [metabase.api.common :as api]
    [metabase.models.activity :as activity]
    [metabase.models.interface :as mi]
-   [metabase.public-settings.premium-features :as premium-features]
    [metabase.util :as u]
    [metabase.util.malli :as mu]
    [metabase.util.malli.registry :as mr]
@@ -16,6 +15,10 @@
    [methodical.core :as m]
    [steffan-westcott.clj-otel.api.trace.span :as span]
    [toucan2.core :as t2]))
+
+
+(declare _model)
+(declare activity)
 
 (set! *warn-on-reflection* true)
 
@@ -98,8 +101,7 @@
 (defn- log-enabled?
   "Returns true when we should record audit data into the audit log."
   []
-  (or (premium-features/is-hosted?)
-      (premium-features/has-feature? :audit-app)))
+  (constantly true))
 
 (mu/defn record-event!
   "Records an event in the Audit Log.
