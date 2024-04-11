@@ -302,7 +302,8 @@
 
   ;; alias for CI-specific options.
   :ci
-  {:jvm-opts ["-Xmx2g"
+  {:jvm-opts ["-Xmx12g"
+              "-Xms12g"
               ;; normally CircleCI sets `CI` as an env var, so this is mostly to replicate that locally. Hawk will not
               ;; print the progress bar in output when this is set. Progress bars aren't very CI friendly
               "-Dci=TRUE"]}
@@ -525,9 +526,7 @@
                ["metabase\\.driver\\.mysql.*"
                 "metabase\\.driver\\.postgres.*"]}
    ;; different port from `:test` so you can run it at the same time as `:test`.
-   :jvm-opts ["-Dmb.jetty.port=3002"
-              ;; default heap size is 1GB, we were getting OOM on CI so we need to bump this
-              "-Xmx4g"]}
+   :jvm-opts ["-Dmb.jetty.port=3002"]}
 
   ;; clj -T:cljfmt fix '{:paths ["src/metabase/events/view_log.clj"]}'
   :cljfmt
