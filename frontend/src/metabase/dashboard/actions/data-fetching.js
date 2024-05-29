@@ -2,7 +2,6 @@ import { getIn } from "icepick";
 import { denormalize, normalize, schema } from "normalizr";
 import { t } from "ttag";
 
-import { showAutoApplyFiltersToast } from "metabase/dashboard/actions/parameters";
 import { defer } from "metabase/lib/promise";
 import {
   createAction,
@@ -32,7 +31,6 @@ import {
   getDashCardBeforeEditing,
   getParameterValues,
   getLoadingDashCards,
-  getCanShowAutoApplyFiltersToast,
   getDashboardById,
   getDashCardById,
   getSelectedTabId,
@@ -129,10 +127,6 @@ const loadingComplete = createThunkAction(
         },
         { once: true },
       );
-    }
-
-    if (getCanShowAutoApplyFiltersToast(getState())) {
-      dispatch(showAutoApplyFiltersToast());
     }
   },
 );
