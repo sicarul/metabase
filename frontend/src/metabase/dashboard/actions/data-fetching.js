@@ -4,6 +4,7 @@ import { t } from "ttag";
 import { defer } from "metabase/lib/promise";
 import { createAction, createThunkAction } from "metabase/lib/redux";
 import { equals } from "metabase/lib/utils";
+import { uuid } from "metabase/lib/uuid";
 import {
   DashboardApi,
   CardApi,
@@ -107,7 +108,11 @@ const loadingComplete = createThunkAction(
 
 export const fetchCardData = createThunkAction(
   FETCH_CARD_DATA,
-  function (card, dashcard, { reload, clearCache, ignoreCache } = {}) {
+  function (
+    card,
+    dashcard,
+    { reload, clearCache, ignoreCache, dashboardLoadId } = {},
+  ) {
     return async function (dispatch, getState) {
       dispatch({
         type: FETCH_CARD_DATA_PENDING,
@@ -274,6 +279,7 @@ export const fetchCardData = createThunkAction(
               parameters: datasetQuery.parameters,
               ignore_cache: ignoreCache,
               dashboard_id: dashcard.dashboard_id,
+              dashboard_load_id: dashboardLoadId,
             };
 
         result = await fetchDataOrError(
@@ -299,6 +305,7 @@ export const fetchDashboardCardData =
   (dispatch, getState) => {
     const dashboard = getDashboardComplete(getState());
     const selectedTabId = getSelectedTabId(getState());
+    const dashboardLoadId = uuid();
 
     const loadingIds = getLoadingDashCards(getState()).loadingIds;
     const nonVirtualDashcards = getCurrentTabDashboardCards(
@@ -346,7 +353,7 @@ export const fetchDashboardCardData =
 
     const promises = nonVirtualDashcardsToFetch.map(({ card, dashcard }) => {
       return dispatch(
-        fetchCardData(card, dashcard, { reload, clearCache }),
+        fetchCardData(card, dashcard, { reload, clearCache, dashboardLoadId }),
       ).then(() => {
         return dispatch(updateLoadingTitle(nonVirtualDashcardsToFetch.length));
       });
