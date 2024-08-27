@@ -5,30 +5,30 @@ import {
 } from "e2e/support/cypress_data";
 import { SAMPLE_DATABASE } from "e2e/support/cypress_sample_database";
 import {
-  openOrdersTable,
-  restore,
-  selectFilterOperator,
-  popover,
+  assertQueryBuilderRowCount,
   cartesianChartCircle,
-  openProductsTable,
-  visualize,
-  filter,
-  filterWidget,
+  createQuestion,
+  enterCustomColumnDetails,
   entityPickerModal,
   entityPickerModalTab,
+  filter,
+  filterWidget,
   getNotebookStep,
-  queryBuilderMain,
-  startNewQuestion,
-  visitQuestionAdhoc,
-  assertQueryBuilderRowCount,
-  queryBuilderHeader,
   modal,
-  enterCustomColumnDetails,
-  createQuestion,
-  tableHeaderClick,
   openNotebook,
+  openOrdersTable,
+  openProductsTable,
+  popover,
+  queryBuilderHeader,
+  queryBuilderMain,
   resetTestTable,
+  restore,
   resyncDatabase,
+  selectFilterOperator,
+  startNewQuestion,
+  tableHeaderClick,
+  visitQuestionAdhoc,
+  visualize,
 } from "e2e/support/helpers";
 
 const {
@@ -784,7 +784,8 @@ describe("issue 27123", () => {
   });
 });
 
-describe("issue 29094", () => {
+// TODO: Unskip this test when we bring back expression type checking. See #31877.
+describe.skip("issue 29094", () => {
   beforeEach(() => {
     restore();
     cy.signInAsNormalUser();

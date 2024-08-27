@@ -16,17 +16,17 @@ import { getEmbedOptions, getIsEmbedded } from "metabase/selectors/embed";
 import { getMetadata } from "metabase/selectors/metadata";
 import Question from "metabase-lib/v1/Question";
 import {
-  getParameterValuesBySlug,
   getValuePopulatedParameters as _getValuePopulatedParameters,
+  getParameterValuesBySlug,
 } from "metabase-lib/v1/parameters/utils/parameter-values";
 import type {
   Card,
   CardId,
+  DashCardId,
   Dashboard,
   DashboardCard,
   DashboardId,
   DashboardParameterMapping,
-  DashCardId,
   ParameterId,
 } from "metabase-types/api";
 import type {
@@ -359,6 +359,7 @@ export const getQuestions = (state: State) => {
   return questionsById;
 };
 
+// TODO: remove it as we added cache to MLv2 and it should be fast now
 // getQuestions selector returns an array with stable references to the questions
 // but array itself is always new, so it may cause troubles in re-renderings
 const getQuestionsMemoized = createDeepEqualSelector(

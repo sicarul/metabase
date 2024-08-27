@@ -6,11 +6,11 @@ import { createAction, createThunkAction } from "metabase/lib/redux";
 import { equals } from "metabase/lib/utils";
 import { uuid } from "metabase/lib/uuid";
 import {
-  DashboardApi,
   CardApi,
-  PublicApi,
+  DashboardApi,
   EmbedApi,
   MetabaseApi,
+  PublicApi,
   maybeUsePivotEndpoint,
 } from "metabase/services";
 import { getParameterValuesBySlug } from "metabase-lib/v1/parameters/utils/parameter-values";
@@ -21,15 +21,18 @@ import {
   getDashboardComplete,
   getDashCardBeforeEditing,
   getLoadingDashCards,
+  getDashCardBeforeEditing,
   getDashCardById,
+  getDashboardComplete,
+  getLoadingDashCards,
   getSelectedTabId,
 } from "../selectors";
 import {
-  isVirtualDashCard,
-  getAllDashboardCards,
-  getDashboardType,
   fetchDataOrError,
+  getAllDashboardCards,
   getCurrentTabDashboardCards,
+  getDashboardType,
+  isVirtualDashCard,
 } from "../utils";
 
 export const FETCH_DASHBOARD_CARD_DATA =

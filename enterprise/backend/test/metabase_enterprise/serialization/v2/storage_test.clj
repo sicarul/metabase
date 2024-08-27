@@ -10,9 +10,7 @@
    [metabase-enterprise.serialization.v2.storage :as storage]
    [metabase.models :refer [Card Collection Dashboard DashboardCard Database Field FieldValues NativeQuerySnippet
                             Table]]
-   [metabase.models.serialization :as serdes]
    [metabase.test :as mt]
-   [metabase.util.date-2 :as u.date]
    [metabase.util.yaml :as yaml]
    [toucan2.core :as t2]))
 
@@ -91,7 +89,6 @@
                        [gp-dir p-dir "dashboards" (str (:entity_id d1) "_parent_dash.yaml")]} ; Parent dashboard
                      (file-set (io/file dump-dir "collections")))))))))))
 
-
 (deftest snippets-collections-nesting-test
   (ts/with-random-dump-dir [dump-dir "serdesv2-"]
     (mt/with-empty-h2-app-db
@@ -119,8 +116,7 @@
                        [gp-dir p-dir c-dir (str c-dir ".yaml")]}                              ; Child collection
                      (file-set (io/file dump-dir "collections")))))
             (testing "snippets under snippets/"
-              (is (= #{
-                       [(str (:entity_id c1) "_root_snippet.yaml")]                      ; Root snippet
+              (is (= #{[(str (:entity_id c1) "_root_snippet.yaml")]                      ; Root snippet
                        [gp-dir (str (:entity_id c2) "_grandparent_snippet.yaml")]        ; Grandparent snippet
                        [gp-dir p-dir (str (:entity_id c3) "_parent_snippet.yaml")]       ; Parent snippet
                        [gp-dir p-dir c-dir (str (:entity_id c4) "_child_snippet.yaml")]} ; Child snippet
@@ -146,8 +142,7 @@
                 "Slashes in directory names get escaped"))
 
           (testing "the Field was properly exported"
-            (is (= (-> (into {} (serdes/extract-one "Field" {} (t2/select-one 'Field :id (:id website))))
-                       (update :created_at      u.date/format))
+            (is (= (ts/extract-one "Field" (:id website))
                    (-> (yaml/from-file (io/file dump-dir
                                                 "databases" "My Company Data"
                                                 "tables"    "Customers"

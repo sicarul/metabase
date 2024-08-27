@@ -5,18 +5,18 @@ import {
   ORDERS_COUNT_QUESTION_ID,
 } from "e2e/support/cypress_sample_instance_data";
 import {
-  saveDashboard,
-  modal,
-  popover,
-  restore,
-  visitDashboard,
-  findDashCardAction,
-  resetSnowplow,
-  enableTracking,
   describeWithSnowplow,
+  enableTracking,
+  entityPickerModal,
   expectGoodSnowplowEvent,
   expectNoBadSnowplowEvents,
-  entityPickerModal,
+  findDashCardAction,
+  modal,
+  popover,
+  resetSnowplow,
+  restore,
+  saveDashboard,
+  visitDashboard,
 } from "e2e/support/helpers";
 import {
   createMockDashboardCard,
@@ -150,14 +150,12 @@ describeWithSnowplow("scenarios > dashboard cards > replace question", () => {
 
     // Ensure can replace with a question
     replaceQuestion(findTargetDashcard(), {
-      nextQuestionName: "Next question",
-      collectionName: "First collection",
+      nextQuestionName: "Orders",
     });
     expectGoodSnowplowEvent({ event: "dashboard_card_replaced" });
     findTargetDashcard().within(() => {
-      assertDashCardTitle("Next question");
-      cy.findByText("Ean").should("exist");
-      cy.findByText("Rustic Paper Wallet").should("exist");
+      assertDashCardTitle("Orders");
+      cy.findByText("Product ID").should("exist");
     });
 
     // Ensure can replace with a model
@@ -190,8 +188,7 @@ describeWithSnowplow("scenarios > dashboard cards > replace question", () => {
     });
 
     replaceQuestion(findTargetDashcard(), {
-      nextQuestionName: "Next question",
-      collectionName: "First collection",
+      nextQuestionName: "Orders",
     });
 
     // There're two toasts: "Undo replace" and "Undo parameters auto-wiring"

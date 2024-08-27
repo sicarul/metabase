@@ -1,19 +1,20 @@
 import {
-  ORDERS_QUESTION_ID,
   ORDERS_DASHBOARD_ID,
+  ORDERS_QUESTION_ID,
 } from "e2e/support/cypress_sample_instance_data";
 import {
-  restore,
-  visitQuestion,
-  visitDashboard,
-  openPeopleTable,
-  describeEE,
-  setTokenFeatures,
-  popover,
-  entityPickerModal,
-  visitFullAppEmbeddingUrl,
-  openCommandPalette,
   commandPalette,
+  createModerationReview,
+  describeEE,
+  entityPickerModal,
+  openCommandPalette,
+  openPeopleTable,
+  popover,
+  restore,
+  setTokenFeatures,
+  visitDashboard,
+  visitFullAppEmbeddingUrl,
+  visitQuestion,
 } from "e2e/support/helpers";
 
 describe("search > recently viewed", () => {
@@ -34,14 +35,14 @@ describe("search > recently viewed", () => {
     // inside the "Orders in a dashboard" dashboard, the order is queried again,
     // which elicits a ViewLog entry
 
-    cy.intercept("/api/activity/recent_views").as("recent");
+    cy.intercept("/api/activity/recents?context=views").as("recent");
     //Because this is testing keyboard navigation, these tests can run in embedded mode
     visitFullAppEmbeddingUrl({ url: "/", qs: { top_nav: true, search: true } });
     cy.wait("@recent");
 
     cy.findByPlaceholderText("Search…").click();
 
-    cy.findByTestId("loading-spinner").should("not.exist");
+    cy.findByTestId("loading-indicator").should("not.exist");
   });
 
   it("shows list of recently viewed items", () => {
@@ -62,12 +63,11 @@ describe("search > recently viewed", () => {
   it("shows up-to-date list of recently viewed items after another page is visited (metabase#36868)", () => {
     cy.findByPlaceholderText("Search…").click();
     cy.wait("@recent");
-    cy.findByTestId("loading-spinner").should("not.exist");
+    cy.findByTestId("loading-indicator").should("not.exist");
 
     assertRecentlyViewedItem(0, "Orders in a dashboard", "Dashboard");
     assertRecentlyViewedItem(1, "Orders", "Question");
     assertRecentlyViewedItem(2, "People", "Table");
-    cy.findAllByTestId("recently-viewed-item-title").should("have.length", 3);
 
     const recentlyViewedItems = cy.findAllByTestId(
       "recently-viewed-item-title",
@@ -141,7 +141,7 @@ describeEE("search > recently viewed > enterprise features", () => {
     cy.signInAsAdmin();
     setTokenFeatures("all");
 
-    cy.request("POST", "/api/moderation-review", {
+    createModerationReview({
       status: "verified",
       moderated_item_id: ORDERS_QUESTION_ID,
       moderated_item_type: "card",

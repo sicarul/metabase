@@ -16,6 +16,7 @@ import {
   createDashboardWithTabs,
   createNativeQuestion,
   createQuestion,
+  dashboardParameterSidebar,
   dashboardParametersContainer,
   editDashboard,
   filterWidget,
@@ -29,16 +30,16 @@ import {
   saveDashboard,
   selectDashboardFilter,
   setFilter,
+  setModelMetadata,
   sidebar,
+  tableHeaderClick,
+  tableInteractive,
   undoToast,
   updateDashboardCards,
   visitDashboard,
   visitEmbeddedPage,
   visitModel,
   visitPublicDashboard,
-  setModelMetadata,
-  tableHeaderClick,
-  dashboardParameterSidebar,
 } from "e2e/support/helpers";
 import {
   createMockDashboardCard,
@@ -236,7 +237,7 @@ describe("issue 8030 + 32444", () => {
   });
 });
 
-describe("issue 12720", () => {
+describe("issue 12720, issue 47172", () => {
   function clickThrough(title) {
     visitDashboard(ORDERS_DASHBOARD_ID);
     cy.findAllByTestId("dashcard-container").contains(title).click();
@@ -287,7 +288,7 @@ describe("issue 12720", () => {
             {
               card_id: SQL_ID,
               row: 0,
-              col: 6, // making sure it doesn't overlap the existing card
+              col: 8, // making sure it doesn't overlap the existing card
               size_x: 7,
               size_y: 5,
               parameter_mappings: [
@@ -325,6 +326,33 @@ describe("issue 12720", () => {
 
     clickThrough("12720_SQL");
     clickThrough("Orders");
+  });
+
+  it("should apply the specific (before|after) filter on a native question with field filter (metabase#47172)", () => {
+    visitDashboard(ORDERS_DASHBOARD_ID);
+
+    getDashboardCard(1).within(() => {
+      cy.findByTestId("TableFooter").should("exist");
+      cy.findByText("There was a problem displaying this chart.").should(
+        "not.exist",
+      );
+
+      cy.log("Drill down to the question");
+      cy.intercept("POST", "/api/card/*/query").as("cardQuery");
+      cy.findByText(questionDetails.name).click();
+    });
+
+    cy.location("search").should("eq", `?filter=${dashboardFilter.default}`);
+    cy.wait("@cardQuery");
+    tableInteractive().should("be.visible").and("contain", "97.44");
+    cy.findByTestId("question-row-count").should(
+      "not.have.text",
+      "Showing 0 rows",
+    );
+    cy.findByTestId("question-row-count").should(
+      "have.text",
+      "Showing 1,980 rows",
+    );
   });
 });
 
@@ -1236,8 +1264,10 @@ describe("issue 22788", () => {
 
   function addFilterAndAssert() {
     filterWidget().click();
-    popover().findByText("Gizmo").click();
-    cy.button("Add filter").click();
+    popover().within(() => {
+      cy.findByRole("textbox").type("Gizmo");
+      cy.button("Add filter").click();
+    });
 
     cy.findAllByText("Gizmo");
     cy.findAllByText("Doohickey").should("not.exist");
@@ -1602,7 +1632,7 @@ describe("issue 25322", () => {
 
     // eslint-disable-next-line no-unscoped-text-selectors -- deprecated usage
     cy.findByText(parameterDetails.name).click();
-    popover().findByTestId("loading-spinner").should("exist");
+    popover().findByTestId("loading-indicator").should("exist");
   });
 });
 
@@ -2132,8 +2162,10 @@ describe("issue 27768", () => {
     saveDashboard();
 
     filterWidget().click();
-    popover().findByText("Gizmo").click();
-    cy.button("Add filter").click();
+    popover().within(() => {
+      cy.findByRole("textbox").type("Gizmo");
+      cy.button("Add filter").click();
+    });
 
     cy.findAllByText("Doohickey").should("not.exist");
 

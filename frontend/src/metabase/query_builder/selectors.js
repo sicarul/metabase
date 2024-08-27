@@ -40,8 +40,8 @@ import { isAbsoluteDateTimeUnit } from "metabase-types/guards/date-time";
 import { isAdHocModelQuestion } from "metabase-lib/v1/metadata/utils/models";
 import { getCardUiParameters } from "metabase-lib/v1/parameters/utils/cards";
 import {
-  normalizeParameters,
   normalizeParameterValue,
+  normalizeParameters,
 } from "metabase-lib/v1/parameters/utils/parameter-values";
 import Question from "metabase-lib/v1/Question";
 import { getIsPKFromTablePredicate } from "metabase-lib/v1/types/utils/isa";
@@ -255,11 +255,13 @@ export const getDatabaseId = createSelector(
 export const getTableForeignKeyReferences = state =>
   state.qb.tableForeignKeyReferences;
 
+const getDatabasesListDefaultValue = [];
 export const getDatabasesList = state =>
   Databases.selectors.getList(state, {
     entityQuery: { include: "tables", saved: true },
-  }) || [];
+  }) || getDatabasesListDefaultValue;
 
+const getTablesDefaultValue = [];
 export const getTables = createSelector(
   [getDatabaseId, getDatabasesList],
   (databaseId, databases) => {
@@ -270,7 +272,7 @@ export const getTables = createSelector(
       }
     }
 
-    return [];
+    return getTablesDefaultValue;
   },
 );
 

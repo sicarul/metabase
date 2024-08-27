@@ -2,38 +2,38 @@ import { SAMPLE_DB_ID, WRITABLE_DB_ID } from "e2e/support/cypress_data";
 import { SAMPLE_DATABASE } from "e2e/support/cypress_sample_database";
 import {
   addCustomColumn,
-  enterCustomColumnDetails,
-  getNotebookStep,
-  entityPickerModal,
-  popover,
-  visualize,
-  restore,
-  startNewQuestion,
-  queryBuilderMain,
-  selectFilterOperator,
-  entityPickerModalTab,
-  withDatabase,
-  summarize,
+  addOrUpdateDashboardCard,
   cartesianChartCircle,
+  createNativeQuestion,
+  editDashboard,
+  enterCustomColumnDetails,
+  entityPickerModal,
+  entityPickerModalTab,
+  filter,
+  filterWidget,
+  getDashboardCard,
+  getNotebookStep,
+  main,
+  modal,
+  openNotebook,
   openOrdersTable,
   openProductsTable,
-  openNotebook,
-  filter,
-  visitDashboard,
-  editDashboard,
-  setFilter,
-  filterWidget,
-  visitQuestionAdhoc,
-  addOrUpdateDashboardCard,
-  modal,
+  popover,
+  queryBuilderMain,
+  resetTestTable,
+  restore,
   saveDashboard,
   selectDashboardFilter,
-  getDashboardCard,
-  visitQuestion,
+  selectFilterOperator,
+  setFilter,
+  startNewQuestion,
+  summarize,
   tableHeaderClick,
-  resetTestTable,
-  main,
-  createNativeQuestion,
+  visitDashboard,
+  visitQuestion,
+  visitQuestionAdhoc,
+  visualize,
+  withDatabase,
 } from "e2e/support/helpers";
 import { createSegment } from "e2e/support/helpers/e2e-table-metadata-helpers";
 
@@ -316,8 +316,10 @@ describe("issue 18747", () => {
 
   function addValueToParameterFilter() {
     filterWidget().click();
-    popover().find("input").type("14");
-    popover().contains("Add filter").click();
+    popover().within(() => {
+      cy.findByRole("textbox").type("14");
+      cy.button("Add filter").click();
+    });
   }
 
   beforeEach(() => {

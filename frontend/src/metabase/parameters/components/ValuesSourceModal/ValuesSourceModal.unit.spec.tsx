@@ -3,17 +3,17 @@ import userEvent from "@testing-library/user-event";
 import { createMockMetadata } from "__support__/metadata";
 import {
   setupCardsEndpoints,
+  setupCollectionByIdEndpoint,
+  setupCollectionItemsEndpoint,
   setupCollectionsEndpoints,
   setupDatabasesEndpoints,
   setupErrorParameterValuesEndpoints,
   setupParameterValuesEndpoints,
+  setupRecentViewsAndSelectionsEndpoints,
   setupSearchEndpoints,
+  setupTableQueryMetadataEndpoint,
   setupUnauthorizedCardsEndpoints,
   setupUnauthorizedCollectionsEndpoints,
-  setupRecentViewsEndpoints,
-  setupTableQueryMetadataEndpoint,
-  setupCollectionByIdEndpoint,
-  setupCollectionItemsEndpoint,
 } from "__support__/server-mocks";
 import {
   renderWithProviders,
@@ -422,7 +422,7 @@ const setup = async ({
 
   setupDatabasesEndpoints(databases);
   setupSearchEndpoints([]);
-  setupRecentViewsEndpoints([]);
+  setupRecentViewsAndSelectionsEndpoints([]);
   setupCollectionByIdEndpoint({
     collections: [personalCollection],
   });

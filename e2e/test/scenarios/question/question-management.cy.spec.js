@@ -3,29 +3,29 @@ import _ from "underscore";
 
 import { USERS, USER_GROUPS } from "e2e/support/cypress_data";
 import {
-  ORDERS_QUESTION_ID,
   ORDERS_COUNT_QUESTION_ID,
   ORDERS_DASHBOARD_ID,
+  ORDERS_QUESTION_ID,
 } from "e2e/support/cypress_sample_instance_data";
 import {
-  restore,
-  visitQuestion,
-  visitDashboard,
-  popover,
-  openNavigationSidebar,
-  navigationSidebar,
-  openQuestionActions,
-  questionInfoButton,
-  getPersonalCollectionName,
-  describeWithSnowplow,
-  resetSnowplow,
-  enableTracking,
-  expectNoBadSnowplowEvents,
-  expectGoodSnowplowEvents,
-  modal,
-  entityPickerModal,
-  openCommandPalette,
   commandPalette,
+  describeWithSnowplow,
+  enableTracking,
+  entityPickerModal,
+  expectGoodSnowplowEvents,
+  expectNoBadSnowplowEvents,
+  getPersonalCollectionName,
+  modal,
+  navigationSidebar,
+  openCommandPalette,
+  openNavigationSidebar,
+  openQuestionActions,
+  popover,
+  questionInfoButton,
+  resetSnowplow,
+  restore,
+  visitDashboard,
+  visitQuestion,
 } from "e2e/support/helpers";
 
 const PERMISSIONS = {
@@ -259,10 +259,15 @@ describe(
                   cy.log("assert public collections are not visible");
                   openQuestionActions();
                   popover().findByText("Add to dashboard").click();
+                  clickTabForUser(user, "Dashboards");
+
                   entityPickerModal().within(() => {
                     cy.findByText("Add this question to a dashboard").should(
                       "be.visible",
                     );
+
+                    clickTabForUser(user, "Dashboards");
+
                     cy.findByText(/'s personal collection/i).should(
                       "be.visible",
                     );
@@ -281,6 +286,7 @@ describe(
                       "be.visible",
                     );
 
+                    clickTabForUser(user, "Dashboards");
                     cy.findByText(/'s personal collection/i).should(
                       "be.visible",
                     );
@@ -302,11 +308,7 @@ describe(
                     openQuestionActions();
                     cy.findByTestId("add-to-dashboard-button").click();
 
-                    entityPickerModal()
-                      .findByRole("tab", { name: /Dashboards/ })
-                      .click();
-
-                    findActivePickerItem("Orders in a dashboard");
+                    findSelectedPickerItem("Orders in a dashboard");
                   });
 
                   it("should handle lost access", () => {
@@ -498,6 +500,12 @@ function findActivePickerItem(name) {
   });
 }
 
+function findSelectedPickerItem(name) {
+  return findPickerItem(name).then($button => {
+    expect($button).to.have.attr("aria-selected", "true");
+  });
+}
+
 function findInactivePickerItem(name) {
   return findPickerItem(name).then($button => {
     expect($button).not.to.have.attr("data-active", "true");
@@ -516,4 +524,12 @@ function moveQuestionTo(newCollectionName, clickTab = false) {
 
 function clickButton(button_name) {
   cy.button(button_name).should("not.be.disabled").click();
+}
+
+function clickTabForUser(user, tabName) {
+  if (user === "admin") {
+    cy.findAllByRole("tab")
+      .contains(tabName)
+      .then($el => $el && cy.wrap($el).click());
+  }
 }

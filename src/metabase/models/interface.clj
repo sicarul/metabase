@@ -277,11 +277,6 @@
   {:in  encrypted-json-in
    :out cached-encrypted-json-out})
 
-(def transform-encrypted-text
-  "Transform for encrypted text."
-  {:in  encryption/maybe-encrypt
-   :out encryption/maybe-decrypt})
-
 (defn normalize-visualization-settings
   "The frontend uses JSON-serialized versions of MBQL clauses as keys in `:column_settings`. This normalizes them
    to modern MBQL clauses so things work correctly."
@@ -376,7 +371,6 @@
     (u/prog1 (mbql.normalize/normalize-fragment [:query] definition)
       (validate-legacy-metric-segment-definition <>))))
 
-
 (def transform-legacy-metric-segment-definition
   "Transform for inner queries like those in Metric definitions."
   {:in  (comp json-in normalize-legacy-metric-segment-definition)
@@ -421,7 +415,7 @@
   []
   (classloader/require 'metabase.driver.sql.query-processor)
   (let [db-type ((requiring-resolve 'metabase.db/db-type))]
-   ((resolve 'metabase.driver.sql.query-processor/current-datetime-honeysql-form) db-type)))
+    ((resolve 'metabase.driver.sql.query-processor/current-datetime-honeysql-form) db-type)))
 
 (defn- add-created-at-timestamp [obj & _]
   (cond-> obj
@@ -434,7 +428,6 @@
                                               (:updated_at obj))]
     (cond-> obj
       (not changes-already-include-updated-at?) (assoc :updated_at (now)))))
-
 
 (t2/define-before-insert :hook/timestamped?
   [instance]

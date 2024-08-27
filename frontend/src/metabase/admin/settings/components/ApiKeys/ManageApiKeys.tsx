@@ -1,14 +1,14 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { t } from "ttag";
 
 import { useListApiKeysQuery } from "metabase/api";
-import { StyledTable } from "metabase/common/components/Table";
+import { ClientSortableTable } from "metabase/common/components/Table";
 import Breadcrumbs from "metabase/components/Breadcrumbs";
 import { DelayedLoadingAndErrorWrapper } from "metabase/components/LoadingAndErrorWrapper/DelayedLoadingAndErrorWrapper";
 import { Ellipsified } from "metabase/core/components/Ellipsified";
 import CS from "metabase/css/core/index.css";
 import { formatDateTimeWithUnit } from "metabase/lib/formatting/date";
-import { Stack, Title, Text, Button, Group, Icon } from "metabase/ui";
+import { Button, Group, Icon, Stack, Text, Title } from "metabase/ui";
 import { getThemeOverrides } from "metabase/ui/theme";
 import type { ApiKey } from "metabase-types/api";
 
@@ -75,7 +75,7 @@ function ApiKeysTable({
   }
 
   return (
-    <StyledTable
+    <ClientSortableTable
       data-testid="api-keys-table"
       columns={columns}
       rows={flatApiKeys}

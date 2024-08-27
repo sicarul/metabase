@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createMockMetadata } from "__support__/metadata";
 import {
   setupDatabasesEndpoints,
-  setupRecentViewsEndpoints,
+  setupRecentViewsAndSelectionsEndpoints,
   setupSearchEndpoints,
 } from "__support__/server-mocks";
 import { createMockEntitiesState } from "__support__/store";
@@ -26,10 +26,10 @@ import {
   createMockRecentCollectionItem,
 } from "metabase-types/api/mocks";
 import {
-  createSampleDatabase,
-  createStructuredModelCard,
   PRODUCTS_ID,
+  createSampleDatabase,
   createSavedStructuredCard,
+  createStructuredModelCard,
 } from "metabase-types/api/mocks/presets";
 import { createMockState } from "metabase-types/store/mocks";
 
@@ -173,7 +173,7 @@ function setup({
 
   setupDatabasesEndpoints(DATABASES);
   setupSearchEndpoints(searchItems);
-  setupRecentViewsEndpoints(recentItems);
+  setupRecentViewsAndSelectionsEndpoints(recentItems, ["selections"]);
 
   function Wrapper() {
     const [query, setQuery] = useState(step.query);

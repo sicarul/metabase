@@ -4,22 +4,23 @@ import type { ComponentPropsWithoutRef } from "react";
 import { IndexRoute, Route } from "react-router";
 
 import {
+  setupAdhocQueryMetadataEndpoint,
   setupAlertsEndpoints,
   setupBookmarksEndpoints,
   setupCardDataset,
   setupCardQueryEndpoints,
+  setupCardQueryMetadataEndpoint,
   setupCardsEndpoints,
   setupCollectionByIdEndpoint,
   setupCollectionsEndpoints,
   setupDatabasesEndpoints,
   setupFieldValuesEndpoints,
   setupModelIndexEndpoints,
+  setupPropertiesEndpoints,
+  setupRecentViewsAndSelectionsEndpoints,
+  setupRecentViewsEndpoints,
   setupSearchEndpoints,
   setupTimelinesEndpoints,
-  setupPropertiesEndpoints,
-  setupRecentViewsEndpoints,
-  setupCardQueryMetadataEndpoint,
-  setupAdhocQueryMetadataEndpoint,
 } from "__support__/server-mocks";
 import {
   renderWithProviders,
@@ -246,6 +247,7 @@ export const setup = async ({
     createMockFieldValues({ field_id: Number(ORDERS.QUANTITY) }),
   );
   setupRecentViewsEndpoints([]);
+  setupRecentViewsAndSelectionsEndpoints([], ["selections"]);
 
   const metadata = createMockCardQueryMetadata({ databases: [TEST_DB] });
   setupAdhocQueryMetadataEndpoint(metadata);

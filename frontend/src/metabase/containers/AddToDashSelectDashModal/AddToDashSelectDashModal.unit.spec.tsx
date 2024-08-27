@@ -4,18 +4,18 @@ import { Route } from "react-router";
 
 import {
   setupCollectionByIdEndpoint,
+  setupCollectionItemsEndpoint,
   setupCollectionsEndpoints,
   setupMostRecentlyViewedDashboard,
+  setupRecentViewsAndSelectionsEndpoints,
   setupSearchEndpoints,
-  setupCollectionItemsEndpoint,
-  setupRecentViewsEndpoints,
 } from "__support__/server-mocks";
 import {
+  mockGetBoundingClientRect,
+  mockScrollBy,
   renderWithProviders,
   screen,
   waitFor,
-  mockGetBoundingClientRect,
-  mockScrollBy,
 } from "__support__/ui";
 import { getNextId } from "__support__/utils";
 import { ROOT_COLLECTION as ROOT } from "metabase/entities/collections";
@@ -234,7 +234,7 @@ const setup = async ({
 
   setupCollectionsEndpoints({ collections, rootCollection: ROOT_COLLECTION });
   setupCollectionByIdEndpoint({ collections, error });
-  setupRecentViewsEndpoints([]);
+  setupRecentViewsAndSelectionsEndpoints([]);
   setupMostRecentlyViewedDashboard(mostRecentlyViewedDashboard);
   setupSearchEndpoints(searchResults);
 
