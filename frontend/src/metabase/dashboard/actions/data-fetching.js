@@ -18,9 +18,6 @@ import { applyParameters } from "metabase-lib/v1/queries/utils/card";
 
 import { DASHBOARD_SLOW_TIMEOUT } from "../constants";
 import {
-  getDashboardComplete,
-  getDashCardBeforeEditing,
-  getLoadingDashCards,
   getDashCardBeforeEditing,
   getDashCardById,
   getDashboardComplete,
