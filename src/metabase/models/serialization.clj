@@ -14,6 +14,8 @@
 
   - Add it to the appropriate list in [[metabase-enterprise.serialization.v2.models]]
   - If it is in the `excluded-models` list, then your job is done
+  - If it's not, you probably want `entity_id` field autopopulated (that's a most common way to make model
+    transportable between instances), add `(derive :model/Model :hook/entity-id)` to your model
   - Define serialization multi-methods on a model (see `Card` and `Collection` for more complex examples or `Action`
     and `Segment` for less involved stuff)
     - `serdes/make-spec` - this is the main entry point. Should list every field in the model (this is checked in
@@ -728,10 +730,10 @@
   [ingested maybe-local]
   (let [model-name (ingested-model ingested)
         adjusted   (xform-one model-name ingested)
-        instance (binding [mi/*deserializing?* true]
-                   (if (nil? maybe-local)
-                     (load-insert! model-name adjusted)
-                     (load-update! model-name adjusted maybe-local)))]
+        instance   (binding [mi/*deserializing?* true]
+                     (if (nil? maybe-local)
+                       (load-insert! model-name adjusted)
+                       (load-update! model-name adjusted maybe-local)))]
     (spec-nested! model-name ingested instance)
     instance))
 
@@ -941,7 +943,12 @@
                   (when schema {:model "Schema" :id schema})
                   {:model "Table" :id table-name}]))
 
-(defn storage-table-path-prefix
+(def ^:private STORAGE-DIRS {"Database" "databases"
+                             "Schema"   "schemas"
+                             "Table"    "tables"
+                             "Field"    "fields"})
+
+(defn storage-path-prefixes
   "The [[serdes/storage-path]] for Table is a bit tricky, and shared with Fields and FieldValues, so it's
   factored out here.
   Takes the :serdes/meta value for a `Table`!
@@ -950,32 +957,57 @@
   With a schema: `[\"databases\" \"db_name\" \"schemas\" \"public\" \"tables\" \"customers\"]`
   No schema:     `[\"databases\" \"db_name\" \"tables\" \"customers\"]`"
   [path]
-  (let [db-name    (-> path first :id)
-        schema     (when (= (count path) 3)
-                     (-> path second :id))
-        table-name (-> path last :id)]
-    (concat ["databases" db-name]
-            (when schema ["schemas" schema])
-            ["tables" table-name])))
+  (into [] cat
+        (for [entry path]
+          [(or (get STORAGE-DIRS (:model entry))
+               (throw (ex-info "Could not find dir name" {:entry entry})))
+           (:id entry)])))
 
 ;;; ## Fields
+
+(defn- field-hierarchy [id]
+  (reverse
+   (t2/select :model/Field
+              {:with-recursive [[[:parents {:columns [:id :name :parent_id :table_id]}]
+                                 {:union-all [{:from   [[:metabase_field :mf]]
+                                               :select [:mf.id :mf.name :mf.parent_id :mf.table_id]
+                                               :where  [:= :id id]}
+                                              {:from   [[:metabase_field :pf]]
+                                               :select [:pf.id :pf.name :pf.parent_id :pf.table_id]
+                                               :join   [[:parents :p] [:= :p.parent_id :pf.id]]}]}]]
+               :from           [:parents]
+               :select         [:name :table_id]})))
+
+(defn recursively-find-field-q
+  "Build a query to find a field among parents (should start with bottom-most field first), i.e.:
+
+  `(recursively-find-field-q 1 [\"inner\" \"outer\"])`"
+  [table-id [field & rest]]
+  (when field
+    {:from   [:metabase_field]
+     :select [:id]
+     :where  [:and
+              [:= :table_id table-id]
+              [:= :name field]
+              [:= :parent_id (recursively-find-field-q table-id rest)]]}))
 
 (defn ^:dynamic ^::cache *export-field-fk*
   "Given a numeric `field_id`, return a portable field reference.
   That has the form `[db-name schema table-name field-name]`, where the `schema` might be nil.
-  [[import-field-fk]] is the inverse."
+  [[*import-field-fk*]] is the inverse."
   [field-id]
   (when field-id
-    (let [{:keys [name table_id]}     (t2/select-one 'Field :id field-id)
-          [db-name schema field-name] (*export-table-fk* table_id)]
-      [db-name schema field-name name])))
+    (let [fields                      (field-hierarchy field-id)
+          [db-name schema field-name] (*export-table-fk* (:table_id (first fields)))]
+      (into [db-name schema field-name] (map :name fields)))))
 
 (defn ^:dynamic ^::cache *import-field-fk*
-  "Given a `field_id` as exported by [[export-field-fk]], resolve it back into a numeric `field_id`."
-  [[db-name schema table-name field-name :as field-id]]
+  "Given a `field_id` as exported by [[*export-field-fk*]], resolve it back into a numeric `field_id`."
+  [[db-name schema table-name & fields :as field-id]]
   (when field-id
-    (let [table_id (*import-table-fk* [db-name schema table-name])]
-      (t2/select-one-pk 'Field :table_id table_id :name field-name))))
+    (let [table-id (*import-table-fk* [db-name schema table-name])
+          field-q  (recursively-find-field-q table-id (reverse fields))]
+      (t2/select-one-pk :model/Field field-q))))
 
 (defn field->path
   "Given a `field_id` as exported by [[export-field-fk]], turn it into a `[{:model ...}]` path for the Field.
@@ -1631,15 +1663,19 @@
 
 ;;; ## Utilities
 
-(defmacro log-stripped-error
-  "Log errors with no stacktrace"
-  [prefix e]
-  `(loop [prefix# ~prefix
-          e#      ~e]
-     (when e#
-       (log/errorf (str prefix# ": " (ex-message e#) " " (-> (ex-data e#)
-                                                             (dissoc :toucan2/context-trace))))
-       (recur "  caused by" (.getCause ^Exception e#)))))
+(defn strip-error
+  "Transforms the error in a list of strings to log"
+  [e prefix]
+  (->> (for [[e prefix] (map vector
+                             (take-while some? (iterate #(.getCause ^Exception %) e))
+                             (cons prefix (repeat "  caused by")))]
+         (str (when prefix (str prefix ": "))
+              (ex-message e)
+              (when-let [data (-> (ex-data e)
+                                  (dissoc :toucan2/context-trace)
+                                  not-empty)]
+                (str " " (pr-str data)))))
+       (str/join "\n")))
 
 ;;; ## Memoizing appdb lookups
 
