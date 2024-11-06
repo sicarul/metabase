@@ -1,6 +1,7 @@
 (ns metabase.query-processor.streaming.xlsx
   (:require
    [cheshire.core :as json]
+   [clojure.java.io :as io]
    [clojure.string :as str]
    [dk.ative.docjure.spreadsheet :as spreadsheet]
    [java-time.api :as t]
@@ -438,8 +439,8 @@
 (defmethod add-row! org.apache.poi.xssf.streaming.SXSSFSheet
   ([^SXSSFSheet sheet values cols col-settings cell-styles typed-cell-styles]
    (let [row-num (if (= 0 (.getPhysicalNumberOfRows sheet))
-                  0
-                  (inc (.getLastRowNum sheet)))]
+                   0
+                   (inc (.getLastRowNum sheet)))]
      (add-row! ^SXSSFSheet sheet row-num values cols col-settings cell-styles typed-cell-styles)))
   ([^SXSSFSheet sheet row-num values cols col-settings cell-styles typed-cell-styles]
    (let [row     (.createRow sheet ^Integer row-num)
@@ -472,8 +473,8 @@
 (defmethod add-row! org.apache.poi.xssf.usermodel.XSSFSheet
   ([^XSSFSheet sheet values cols col-settings cell-styles typed-cell-styles]
    (let [row-num (if (= 0 (.getPhysicalNumberOfRows sheet))
-                  0
-                  (inc (.getLastRowNum sheet)))]
+                   0
+                   (inc (.getLastRowNum sheet)))]
      (add-row! ^XSSFSheet sheet row-num values cols col-settings cell-styles typed-cell-styles)))
   ([^XSSFSheet sheet row-num values cols col-settings cell-styles typed-cell-styles]
    (let [row     (.createRow sheet ^Integer row-num)
@@ -627,6 +628,11 @@
 
 (defmethod qp.si/streaming-results-writer :xlsx
   [_ ^OutputStream os]
+  ;; working around a bug #41919. Will be fixed when we can get a release of apache poi 5.3.1. See
+  ;; https://bz.apache.org/bugzilla/show_bug.cgi?id=69323
+  (let [f (io/file (str (System/getProperty "java.io.tmpdir") "/poifiles"))]
+    (when-not (.exists f)
+      (.mkdirs f)))
   (let [workbook-data      (volatile! nil)
         cell-styles        (volatile! nil)
         typed-cell-styles  (volatile! nil)
@@ -637,7 +643,7 @@
         (let [opts               (when (and (public-settings/temp-native-pivot-exports) pivot-export-options)
                                    (pivot-opts->pivot-spec (merge {:pivot-cols []
                                                                    :pivot-rows []}
-                                                    pivot-export-options) ordered-cols))
+                                                                  pivot-export-options) ordered-cols))
               col-names          (common/column-titles ordered-cols (::mb.viz/column-settings viz-settings) format-rows?)
               pivot-grouping-key (qp.pivot.postprocess/pivot-grouping-key col-names)]
           (when pivot-grouping-key (vreset! pivot-grouping-idx pivot-grouping-key))
@@ -655,9 +661,11 @@
               (vreset! workbook-data wb)))
 
           (let [{:keys [workbook sheet]} @workbook-data
-                data-format              (. ^SXSSFWorkbook workbook createDataFormat)]
+                data-format              (. ^SXSSFWorkbook workbook createDataFormat)
+                cols                     (cond->> ordered-cols
+                                           pivot-grouping-key (m/remove-nth pivot-grouping-key))]
             (set-no-style-custom-helper sheet)
-            (vreset! cell-styles (compute-column-cell-styles workbook data-format viz-settings ordered-cols))
+            (vreset! cell-styles (compute-column-cell-styles workbook data-format viz-settings cols))
             (vreset! typed-cell-styles (compute-typed-cell-styles workbook data-format)))))
 
       (write-row! [_ row row-num ordered-cols {:keys [output-order] :as viz-settings}]
@@ -672,7 +680,7 @@
                                    pivot-grouping-key (m/remove-nth pivot-grouping-key))
               {:keys [sheet]}    @workbook-data]
           (when (or (not group)
-                    (= group 0))
+                    (= qp.pivot.postprocess/NON_PIVOT_ROW_GROUP (int group)))
             (add-row! sheet (inc row-num) modified-row ordered-cols col-settings @cell-styles @typed-cell-styles)
             (when (= (inc row-num) *auto-sizing-threshold*)
               (autosize-columns! sheet)))))
@@ -680,10 +688,10 @@
       (finish! [_ {:keys [row_count]}]
         (let [{:keys [workbook sheet]} @workbook-data]
           (when (or (nil? row_count) (< row_count *auto-sizing-threshold*))
-                ;; Auto-size columns if we never hit the row threshold, or a final row count was not provided
-                (autosize-columns! sheet))
-              (try
-                (spreadsheet/save-workbook-into-stream! os workbook)
-                (finally
-                  (.dispose ^SXSSFWorkbook workbook)
-                  (.close os))))))))
+            ;; Auto-size columns if we never hit the row threshold, or a final row count was not provided
+            (autosize-columns! sheet))
+          (try
+            (spreadsheet/save-workbook-into-stream! os workbook)
+            (finally
+              (.dispose ^SXSSFWorkbook workbook)
+              (.close os))))))))

@@ -22,7 +22,7 @@ import { CloudPanel } from "./components/CloudPanel";
 import { BccToggleWidget } from "./components/Email/BccToggleWidget";
 import { SettingsEmailForm } from "./components/Email/SettingsEmailForm";
 import SettingsLicense from "./components/SettingsLicense";
-import SettingsUpdatesForm from "./components/SettingsUpdatesForm/SettingsUpdatesForm";
+import { SettingsUpdatesForm } from "./components/SettingsUpdatesForm/SettingsUpdatesForm";
 import { UploadSettings } from "./components/UploadSettings";
 import CustomGeoJSONWidget from "./components/widgets/CustomGeoJSONWidget";
 import {
@@ -219,7 +219,7 @@ export const ADMIN_SETTINGS_SECTIONS = {
       {
         key: "bcc-enabled?",
         display_name: t`Add Recipients as CC or BCC`,
-        description: t`Control the visibility of recipients.`,
+        description: t`Control the visibility of alerts and subscriptions recipients.`,
         options: [
           { value: true, name: t`BCC - Hide recipients` },
           {
@@ -608,6 +608,21 @@ export const getSettingValues = createSelector(getSettings, settings => {
   }
   return settingValues;
 });
+
+export const getCurrentVersion = createSelector(
+  getDerivedSettingValues,
+  settings => {
+    return settings.version?.tag;
+  },
+);
+
+export const getLatestVersion = createSelector(
+  getDerivedSettingValues,
+  settings => {
+    const updateChannel = settings["update-channel"] ?? "latest";
+    return settings["version-info"]?.[updateChannel]?.version;
+  },
+);
 
 export const getNewVersionAvailable = createSelector(getSettings, settings => {
   return MetabaseSettings.newVersionAvailable(settings);
