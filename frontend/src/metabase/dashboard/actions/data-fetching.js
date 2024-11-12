@@ -1,7 +1,6 @@
 import { getIn } from "icepick";
 import { t } from "ttag";
 
-import { showAutoApplyFiltersToast } from "metabase/dashboard/actions/parameters";
 import { defer } from "metabase/lib/promise";
 import { createAction, createThunkAction } from "metabase/lib/redux";
 import { equals } from "metabase/lib/utils";
@@ -21,7 +20,6 @@ import {
   getDashboardComplete,
   getDashCardBeforeEditing,
   getLoadingDashCards,
-  getCanShowAutoApplyFiltersToast,
   getDashCardById,
   getSelectedTabId,
 } from "../selectors";
@@ -103,10 +101,6 @@ const loadingComplete = createThunkAction(
         },
         { once: true },
       );
-    }
-
-    if (getCanShowAutoApplyFiltersToast(getState())) {
-      dispatch(showAutoApplyFiltersToast());
     }
   },
 );
