@@ -5,10 +5,8 @@ import { denormalize, normalize, schema } from "normalizr";
 import { match } from "ts-pattern";
 import { t } from "ttag";
 
-import { showAutoApplyFiltersToast } from "metabase/dashboard/actions/parameters";
 import { DASHBOARD_SLOW_TIMEOUT } from "metabase/dashboard/constants";
 import {
-  getCanShowAutoApplyFiltersToast,
   getDashCardBeforeEditing,
   getDashCardById,
   getDashboardById,
@@ -129,7 +127,7 @@ export const setShowLoadingCompleteFavicon = createAction<boolean>(
 
 const loadingComplete = createThunkAction(
   SET_LOADING_DASHCARDS_COMPLETE,
-  () => (dispatch, getState) => {
+  () => dispatch => {
     dispatch(setShowLoadingCompleteFavicon(true));
 
     if (!document.hidden) {
@@ -149,10 +147,6 @@ const loadingComplete = createThunkAction(
         },
         { once: true },
       );
-    }
-
-    if (getCanShowAutoApplyFiltersToast(getState())) {
-      dispatch(showAutoApplyFiltersToast());
     }
   },
 );
