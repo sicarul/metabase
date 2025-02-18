@@ -385,7 +385,7 @@
 (defn log-enabled?
   "Returns true when we should record audit data into the audit log."
   []
-  (or (is-hosted?) (has-feature? :audit-app)))
+  (constantly true))
 
 (defenterprise decode-airgap-token "In OSS, this returns an empty map." metabase-enterprise.airgap [_] {})
 (defenterprise token-valid-now? "In OSS, this returns false." metabase-enterprise.airgap [_] false)
