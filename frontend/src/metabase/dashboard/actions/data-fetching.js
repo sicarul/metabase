@@ -28,7 +28,6 @@ import {
 } from "metabase/services";
 
 import { getMetadata } from "metabase/selectors/metadata";
-import { showAutoApplyFiltersToast } from "metabase/dashboard/actions/parameters";
 import { getParameterValuesBySlug } from "metabase-lib/parameters/utils/parameter-values";
 import { applyParameters } from "metabase-lib/queries/utils/card";
 import {
@@ -36,7 +35,6 @@ import {
   getDashCardBeforeEditing,
   getParameterValues,
   getLoadingDashCards,
-  getCanShowAutoApplyFiltersToast,
   getDashboardById,
   getDashCardById,
   getSelectedTabId,
@@ -113,7 +111,7 @@ const updateLoadingTitle = createThunkAction(
 
 const loadingComplete = createThunkAction(
   SET_LOADING_DASHCARDS_COMPLETE,
-  () => (dispatch, getState) => {
+  () => dispatch => {
     dispatch(setShowLoadingCompleteFavicon(true));
 
     if (!document.hidden) {
@@ -133,10 +131,6 @@ const loadingComplete = createThunkAction(
         },
         { once: true },
       );
-    }
-
-    if (getCanShowAutoApplyFiltersToast(getState())) {
-      dispatch(showAutoApplyFiltersToast());
     }
   },
 );
