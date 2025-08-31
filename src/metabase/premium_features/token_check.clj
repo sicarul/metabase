@@ -382,7 +382,7 @@
 (defn log-enabled?
   "Returns true when we should record audit data into the audit log."
   []
-  (or (premium-features.settings/is-hosted?) (has-feature? :audit-app)))
+  (constantly true))
 
 (defenterprise decode-airgap-token
   "In OSS, this returns an empty map."
