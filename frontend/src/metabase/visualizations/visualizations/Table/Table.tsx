@@ -299,10 +299,10 @@ class Table extends Component<TableProps, TableState> {
         widget: "toggle",
         inline: true,
         isValid: (_column, columnSettings) => {
-          return canWrapText(columnSettings);
+          return isNotImage(columnSettings);
         },
         getHidden: (_column, columnSettings) => {
-          return !canWrapText(columnSettings);
+          return !isNotImage(columnSettings);
         },
       };
     }
