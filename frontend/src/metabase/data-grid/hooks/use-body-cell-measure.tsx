@@ -86,6 +86,7 @@ export const useBodyCellMeasure = (theme?: DataGridTheme) => {
         rowIndex={0}
         columnId="measure"
         wrap={true}
+        formatNewlines={true}
         value=""
         contentTestId=""
         style={{ fontSize: theme?.fontSize, overflow: "visible" }}

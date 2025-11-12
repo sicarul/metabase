@@ -160,7 +160,7 @@
 (defn- include-branding?
   "Branding in exports is included only for instances that do not have a whitelabel feature flag."
   []
-  (not (premium-features/enable-whitelabeling?)))
+  (constantly false))
 
 (defn- slack-dashboard-header
   "Returns a block element that includes a dashboard's name, creator, and filters, for inclusion in a

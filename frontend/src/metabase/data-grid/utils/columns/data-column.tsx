@@ -22,6 +22,7 @@ const getDefaultCellTemplate = <TRow, TValue>(
     formatter,
     cellVariant,
     wrap,
+    formatNewlines,
     getCellClassName,
     getCellStyle,
     getIsEditing,
@@ -55,6 +56,7 @@ const getDefaultCellTemplate = <TRow, TValue>(
         onExpand={onExpand}
         variant={cellVariant}
         wrap={wrap}
+        formatNewlines={formatNewlines}
         className={getCellClassName?.(value, row.index, id)}
         style={getCellStyle?.(value, row.index, id)}
       />
@@ -88,8 +90,15 @@ export const getDataColumn = <TRow, TValue>(
   truncateWidth: number,
   onExpand: (columnName: string, content: React.ReactNode) => void,
 ): ColumnDef<TRow, TValue> => {
-  const { id, accessorFn, wrap, cell, header, headerClickTargetSelector } =
-    columnOptions;
+  const {
+    id,
+    accessorFn,
+    wrap,
+    formatNewlines,
+    cell,
+    header,
+    headerClickTargetSelector,
+  } = columnOptions;
   const columnWidth = columnSizing[id] ?? 0;
   const measuredColumnWidth = measuredColumnSizing[id] ?? 0;
 
@@ -116,6 +125,7 @@ export const getDataColumn = <TRow, TValue>(
     enableResizing: true,
     meta: {
       wrap,
+      formatNewlines,
       enableReordering: true,
       enableSelection: true,
       headerClickTargetSelector,
