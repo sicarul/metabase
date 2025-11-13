@@ -94,8 +94,10 @@
         :let [database-id (get-in mapping [:dashcard :card :dataset_query :database])
               card-id (get-in mapping [:dashcard :card :id])
               mp (lib-be/application-database-metadata-provider database-id)
-              card (lib.metadata/card mp card-id)
-              query (lib/card->underlying-query mp card)]
+              card (lib.metadata/card mp card-id)]
+        ;; Skip cards without a dataset-query (e.g., action cards)
+        :when (:dataset-query card)
+        :let [query (lib/card->underlying-query mp card)]
         :when (and (not-empty query)
                    (m/find-first (partial lib/filters query)
                                  (range (lib/stage-count query))))]
