@@ -357,6 +357,19 @@ export class Table extends Component<TableProps, TableState> {
           return !isNotImage(columnSettings);
         },
       };
+
+      settings["format_newlines"] = {
+        title: t`Format newlines`,
+        default: false,
+        widget: "toggle",
+        inline: true,
+        isValid: (_column, columnSettings) => {
+          return isNotImage(columnSettings);
+        },
+        getHidden: (_column, columnSettings) => {
+          return !isNotImage(columnSettings);
+        },
+      };
     }
 
     let defaultValue = !column.semantic_type || isURL(column) ? "link" : null;

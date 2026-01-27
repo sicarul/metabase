@@ -709,7 +709,7 @@
 (defn log-enabled?
   "Returns true when we should record audit data into the audit log."
   []
-  (or (premium-features.settings/is-hosted?) (has-feature? :audit-app)))
+  true)
 
 (defn query-transforms-enabled?
   "Whether query (native/MBQL) transforms are available on this instance. Available on any non-hosted

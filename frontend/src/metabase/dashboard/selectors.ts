@@ -277,17 +277,6 @@ export const getEffectiveParameterValues = createSelector(
     isAutoApplyFilters ? values : draftValues,
 );
 
-const getIsParameterValuesEmpty = createSelector(
-  [getParameterValues],
-  (parameterValues) => {
-    return Object.values(parameterValues).every((parameterValue) =>
-      Array.isArray(parameterValue)
-        ? parameterValue.length === 0
-        : parameterValue == null,
-    );
-  },
-);
-
 export const getParameterValuesBySlugMap = createSelector(
   [getDashboardComplete, getParameterValues],
   (dashboard, parameterValues) => {
@@ -295,31 +284,6 @@ export const getParameterValuesBySlugMap = createSelector(
       return {};
     }
     return getParameterValuesBySlug(dashboard.parameters, parameterValues);
-  },
-);
-
-export const getCanShowAutoApplyFiltersToast = createSelector(
-  [
-    getDashboard,
-    getAutoApplyFiltersToastDashboardId,
-    getIsAutoApplyFilters,
-    getIsSlowDashboard,
-    getIsParameterValuesEmpty,
-  ],
-  (
-    dashboard,
-    toastDashboardId,
-    isAutoApply,
-    isSlowDashboard,
-    isParameterValuesEmpty,
-  ) => {
-    return (
-      dashboard?.can_write &&
-      dashboard?.id !== toastDashboardId &&
-      isAutoApply &&
-      isSlowDashboard &&
-      !isParameterValuesEmpty
-    );
   },
 );
 

@@ -20,6 +20,7 @@ const getDefaultCellTemplate = <TRow, TValue>({
   formatter,
   cellVariant,
   wrap,
+  formatNewlines,
   getCellClassName,
   getCellStyle,
   getIsEditing,
@@ -53,6 +54,7 @@ const getDefaultCellTemplate = <TRow, TValue>({
         onExpand={onExpand}
         variant={cellVariant}
         wrap={wrap}
+        formatNewlines={formatNewlines}
         className={getCellClassName?.(value, row.index, id)}
         style={getCellStyle?.(value, row.index, id)}
       />
@@ -111,8 +113,15 @@ export const getIsColumnTruncated = ({
 export const getDataColumn = <TRow, TValue>(
   columnOptions: ColumnOptions<TRow, TValue>,
 ): DataColumnDef<TRow, TValue> => {
-  const { id, accessorFn, wrap, cell, header, headerClickTargetSelector } =
-    columnOptions;
+  const {
+    id,
+    accessorFn,
+    wrap,
+    formatNewlines,
+    cell,
+    header,
+    headerClickTargetSelector,
+  } = columnOptions;
 
   const columnDefinition: DataColumnDef<TRow, TValue> = {
     accessorFn,
@@ -129,6 +138,7 @@ export const getDataColumn = <TRow, TValue>(
     enableResizing: true,
     meta: {
       wrap,
+      formatNewlines,
       enableReordering: true,
       enableSelection: true,
       headerClickTargetSelector,

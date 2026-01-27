@@ -479,6 +479,7 @@ export const TableInteractiveInner = forwardRef(function TableInteractiveInner(
       const columnSettings = settings.column?.(col) ?? {};
 
       const wrap = shouldWrap(settings, columnSettings);
+      const formatNewlines = Boolean(columnSettings["format_newlines"]);
       const isMinibar = columnSettings["show_mini_bar"];
       const cellVariant = getBodyCellVariant(col);
       const isImage = columnSettings["view_as"] === "image";
@@ -551,6 +552,7 @@ export const TableInteractiveInner = forwardRef(function TableInteractiveInner(
         headerClickTargetSelector: "[data-header-click-target]",
         align,
         wrap,
+        formatNewlines,
         sortDirection,
         enableResizing: true,
         getBackgroundColor,
