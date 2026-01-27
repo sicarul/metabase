@@ -39,3 +39,9 @@
   text-overflow: ellipsis;
   text-align: center;
 }
+
+.formatNewlines {
+  white-space: pre-wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
