@@ -809,7 +809,7 @@ export const TableInteractiveInner = forwardRef(function TableInteractiveInner(
 
 export const TableInteractive = _.compose(
   withMantineTheme,
-  ExplicitSize({
+  ExplicitSize<TableProps>({
     refreshMode: "throttle",
   }),
 )(TableInteractiveInner);
