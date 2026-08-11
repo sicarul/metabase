@@ -4,7 +4,8 @@
    [java-time.api :as t]
    [metabase.auth-identity.provider :as provider]
    [metabase.test :as mt]
-   [methodical.core :as methodical]))
+   [methodical.core :as methodical]
+   [toucan2.core :as t2]))
 
 ;; Set up test providers for testing the hierarchy
 (derive :provider/test-password ::provider/provider)
@@ -242,6 +243,34 @@
           "Should not have error")
       (is (some? (:user-data result))
           "Should have user-data for new user creation"))))
+
+(deftest request-cannot-spoof-authenticated-identity-test
+  (testing "login! must not trust identity fields from the untrusted request body (GHSA-vwf4-m7j8-wcjf)"
+    ;; Provider whose authenticate fails without producing a :user-id, mimicking the reset-password
+    ;; no-auth-identity path. A caller-supplied :user-id (here a HoneySQL-injecting map) must never reach
+    ;; the User lookup.
+    (derive :provider/test-spoof ::provider/provider)
+    (methodical/defmethod provider/authenticate :provider/test-spoof
+      [_provider _request]
+      {:success? false :error :invalid-token :message "Invalid token"})
+    (let [user-lookups (atom [])]
+      (with-redefs [t2/select-one (fn [model & args]
+                                    (when (and (sequential? model) (= :model/User (first model)))
+                                      (swap! user-lookups conj args))
+                                    nil)]
+        (let [spoof  {:raw "1=1 UNION SELECT id,1,1,1 FROM core_user WHERE is_superuser LIMIT 1"}
+              result (provider/login! :provider/test-spoof
+                                      {:token "1_x"
+                                       :password "Aa123456!"
+                                       :user-id spoof
+                                       :user-data {:email spoof}
+                                       :device-info {:device_id "test" :ip_address "127.0.0.1"}})]
+          (is (nil? (:user result))
+              "No user should be resolved from a failed authentication")
+          (is (nil? (:session result))
+              "No session should be created")
+          (is (empty? @user-lookups)
+              "The spoofed :user-id/:user-data must never be used to query the User table"))))))
 
 (deftest ^:parallel authenticate-failure-bypasses-expiration-check-test
   (testing "Failed authentication bypasses expiration check"

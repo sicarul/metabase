@@ -291,9 +291,20 @@
   [_provider login-result]
   login-result)
 
+(def ^:private authentication-derived-keys
+  "Keys that represent an authenticated identity assertion. They must come only from a provider's
+  `authenticate` result, never from the untrusted login request body. Otherwise a caller could spoof an
+  identity by smuggling one of these keys into the request — e.g. a JSON object value like {\"raw\": \"...\"}
+  that HoneySQL compiles to raw, uninterpolated SQL when used as a query parameter (GHSA-vwf4-m7j8-wcjf)."
+  [:user-id :user-data :provider-id :user :session :jwt-data :claims :oidc-provider-key])
+
 (methodical/defmethod login! :around ::provider
   [provider request]
-  (as-> (merge request (authenticate provider request)) $
+  ;; `authenticate` sees the original request (it reads :token/:code/:email/etc.), but its identity assertion
+  ;; is merged over a request scrubbed of `authentication-derived-keys`, so those fields can only ever be
+  ;; provider-derived and never spoofed by the caller.
+  (as-> (merge (apply dissoc request authentication-derived-keys)
+               (authenticate provider request)) $
     (assoc $ :user
            (or (when-let [user-id (:user-id $)]
                  (t2/select-one [:model/User :id :is_active :last_login :tenant_id] :id user-id))
